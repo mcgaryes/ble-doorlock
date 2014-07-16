@@ -8,6 +8,8 @@
 
 #import "DoorLock.h"
 
+
+
 @interface DoorLock()
 
 @property (nonatomic,strong) CBPeripheral* peripheral;
@@ -43,15 +45,15 @@
 -(void) lockDoor
 {
     UInt8 buf[2] = {0x00, 0x00};
-    buf[1] = 0x00;
+    buf[1] = 0x01;
     NSData *data = [[NSData alloc] initWithBytes:buf length:3];
     [self write:data];
 }
-
+ 
 -(void) unlockDoor
 {
     UInt8 buf[2] = {0x00, 0x00};
-    buf[1] = 0x01;
+    buf[1] = 0x00;
     NSData *data = [[NSData alloc] initWithBytes:buf length:3];
     [self write:data];
 }
@@ -65,39 +67,21 @@
     
     // get service we'll be writing to
     CBService *service = nil;
-    
-    for(int i = 0; i < _peripheral.services.count; i++)
-    {
+    for(int i = 0; i < _peripheral.services.count; i++) {
         CBService *s = [_peripheral.services objectAtIndex:i];
-        char b1[16];
-        char b2[16];
-        [s.UUID.data getBytes:b1];
-        [uuid_service.data getBytes:b2];
-        if (memcmp(b1, b2, s.UUID.data.length) == 0) {
-            service = s;
-        }
+        if([s.UUID isEqual:uuid_service]) service = s;
+        
     }
     
     // get characteristic we'll be writing to
     CBCharacteristic *characteristic;
-    
-    for(int i=0; i < service.characteristics.count; i++)
-    {
+    for(int i=0; i < service.characteristics.count; i++) {
         CBCharacteristic *c = [service.characteristics objectAtIndex:i];
-        char b1[16];
-        char b2[16];
-        [c.UUID.data getBytes:b1];
-        [uuid_char.data getBytes:b2];
-        if (memcmp(b1, b2, c.UUID.data.length) == 0) {
-            characteristic = c;
-        }
+        if([c.UUID isEqual:uuid_char]) characteristic = c;
     }
     
     // check to see that neither is nil
-    if (service == nil || characteristic == nil) {
-        NSLog(@"characteristic or service was null... cant write :(");
-        return;
-    }
+    if (service == nil || characteristic == nil) return;
     
     // write to peripheral
     [_peripheral writeValue:d forCharacteristic:characteristic type:CBCharacteristicWriteWithoutResponse];
@@ -135,6 +119,8 @@
 
 -(void) peripheral:(CBPeripheral *)peripheral didDiscoverServices:(NSError *)error
 {
+    NSLog(@"%@",peripheral.services);
+    
     for (NSUInteger i = 0; i<peripheral.services.count; i++) {
         CBService* service = [peripheral.services objectAtIndex:i];
         if(service.isPrimary) {

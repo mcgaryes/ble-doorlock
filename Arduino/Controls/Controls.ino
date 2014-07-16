@@ -21,6 +21,9 @@ boolean isLocked = false;
  */
 void setup() {
 
+    Serial.begin(9600);
+    Serial.println("Arduino door lock online now...");
+  
     SPI.setDataMode(SPI_MODE0);
     SPI.setBitOrder(LSBFIRST);
     SPI.setClockDivider(SPI_CLOCK_DIV16);
@@ -41,10 +44,12 @@ void loop() {
 
     // If data is ready
     while(ble_available()) {
-
+    
         // read out command and data
         byte data0 = ble_read();
         byte data1 = ble_read();
+
+        
 
         // lock or unlock the foor
         if (data0 == 0x00) {
